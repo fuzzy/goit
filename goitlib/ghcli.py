@@ -3,11 +3,10 @@
 # stdlib imports
 import os
 import json
-import functools
 import logging
-import dateutil
-from datetime import date, datetime, timedelta
+import functools
 import subprocess
+from datetime import date, datetime, timedelta
 
 # internal imports
 from .edict import Edict
@@ -233,8 +232,13 @@ class DataPipeline:
 
         return (
             f"""
-    [blue]Created At[/][underline white]:[/] [cyan]{jdat.createdAt}[/]
-    🔱[underline white]:[/] [cyan]{jdat.forkCount}[/]   👀[underline white]:[/] [cyan]{jdat.watchers.totalCount}[/]   ⭐[underline white]:[/] [cyan]{jdat.stargazerCount}[/]   ❗[underline white]:[/] [cyan]{jdat.issues.totalCount}[/]   🔗[underline white]:[/] [cyan]{jdat.pullRequests.totalCount}[/]
+🕒[underline white]:[/] [cyan]{jdat.createdAt}[/]
+🌐[underline white]:[/] [cyan]{jdat.url}[/]
+
+📦[underline white]:[/] [cyan]{jdat.name}[/]
+📝[underline white]:[/] [cyan]{jdat.description}[/]
+
+🔱[underline white]:[/] [cyan]{jdat.forkCount}[/]   👀[underline white]:[/] [cyan]{jdat.watchers.totalCount}[/]   ⭐[underline white]:[/] [cyan]{jdat.stargazerCount}[/]   ❗[underline white]:[/] [cyan]{jdat.issues.totalCount}[/]   🔗[underline white]:[/] [cyan]{jdat.pullRequests.totalCount}[/]
     """,
             data,
         )
@@ -251,7 +255,11 @@ class DataPipeline:
             else:
                 open_i += 1
                 us = d.updatedAt if d.get("updatedAt", False) else False
-                _us = dateutil.parser.parse(d.updatedAt) if us else None
+                _us = (
+                    datetime.fromisoformat(d.updatedAt.replace("Z", "+00:00"))
+                    if us
+                    else None
+                )
                 updated = (
                     _us.strftime("%a{c} %b %d{c} %Y {at} %I:%M%p").format(
                         c="[yellow],[/]", at="[cyan]@[/]"
@@ -260,23 +268,13 @@ class DataPipeline:
                     else ""
                 )
 
-                cs = dateutil.parser.parse(d.createdAt)
-                _cs = date(
-                    *(
-                        int(cs.strftime("%Y")),
-                        int(cs.strftime("%m")),
-                        int(cs.strftime("%d")),
-                    )
-                )
+                cs = datetime.fromisoformat(d.createdAt.replace("Z", "+00:00"))
+                _cs = date(cs.year, cs.month, cs.day)
+
                 now = datetime.now()
-                _ns = date(
-                    *(
-                        int(now.strftime("%Y")),
-                        int(now.strftime("%m")),
-                        int(now.strftime("%d")),
-                    )
-                )
+                _ns = date(now.year, now.month, now.day)
                 age = f"[red]{(_ns - _cs).days:4d}[/] days"
+
                 mydoc.append((d.number, d.author.name, age, updated, d.title))
 
         richTxt = f"🌐[underline]:[/] {len(data)}   🟢[underline]:[/] {open_i}   🔒[underline]:[/] {closed_i}\n"

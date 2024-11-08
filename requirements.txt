@@ -1,3 +1,2 @@
 rich
 textual
-py-dateutil
