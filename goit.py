@@ -4,15 +4,19 @@
 import os
 
 # internal imports
-from goit import *
+from goitlib import *
 
 
 config_dir = os.path.join(os.getenv("HOME"), ".config", "goit")
 
 
-if __name__ == "__main__":
+def main():
     app = AppSetup()
     app.run()
 
     app = GridApp()
     app.run()
+
+
+if __name__ == "__main__":
+    main()
