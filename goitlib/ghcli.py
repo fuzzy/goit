@@ -19,8 +19,7 @@ from rich.markdown import Markdown
 cache_dir = os.path.join(os.getenv("HOME"), ".cache", "goit")
 cache_age = 60 * 30  # 30 minutes in seconds
 
-if __name__ == "__main__":
-    os.makedirs(f"{cache_dir}/data", exist_ok=True)
+os.makedirs(f"{cache_dir}/data", exist_ok=True)
 
 
 def cache_results():

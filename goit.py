@@ -6,7 +6,7 @@ import os
 # internal imports
 from goitlib import *
 
-
+# Global settings for cache
 config_dir = os.path.join(os.getenv("HOME"), ".config", "goit")
 
 
