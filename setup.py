@@ -10,7 +10,7 @@ except FileNotFoundError:
 
 setup(
     name="goit",
-    version="0.1.2",
+    version="0.2.0",
     author="Mike 'Fuzzy' Partin",
     author_email="fuzzy@thwap.org",
     description="A TUI wrapping many github cli operations.",
