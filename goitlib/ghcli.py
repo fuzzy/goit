@@ -88,9 +88,16 @@ class GitHubCLIWrapper:
         super().__init__()
 
     def _cmd(self):
-        return subprocess.run(
-            self._cmd_s, shell=True, capture_output=True
-        ).stdout.decode()
+        retv = subprocess.run(self._cmd_s, shell=True, capture_output=True)
+        if retv.returncode != 0:
+            with open("/tmp/goit-ghcli.log", "w+") as f:
+                f.write(self._cmd_s + "\n")
+                f.write(retv.stdout.decode())
+                f.write(retv.stderr.decode())
+            raise ValueError(
+                f"Command failed with exit code {retv.returncode}. Check /tmp/goit-ghcli.log for details."
+            )
+        return retv.stdout.decode()
 
     def get_overview(self, owner=False, repo=False):
         if not owner or not repo:
@@ -202,17 +209,53 @@ class GitHubCLIWrapper:
             "url",
         )
         self._cmd_s = (
-            f"gh issue list -R {owner}/{repo} -L 40960 -s all --json {','.join(fields)}"
+            f"gh issue list -R {owner}/{repo} -L 1024 -s all --json {','.join(fields)}"
         )
         return self._cmd()
 
     @cache_results()
     def get_pull_requests(self, owner, repo):
-        return {"pull_requests": [10, 11, 12, 13]}  # Replace with actual data fetching
+        fields = (
+            "author",
+            "body",
+            "closed",
+            "closedAt",
+            "comments",
+            "createdAt",
+            "isDraft",
+            "mergeable",
+            "mergedAt",
+            "number",
+            "state",
+            "title",
+            "updatedAt",
+            "url",
+        )
+        self._cmd_s = f'gh pr list -R {owner}/{repo} -L 1024 --json {",".join(fields)}'
+        return self._cmd()
 
     @cache_results()
     def get_actions(self, owner, repo):
-        return {"actions": [1, 2, 3]}  # Replace with actual data fetching
+        fields = (
+            "attempt",
+            "conclusion",
+            "createdAt",
+            "databaseId",
+            "displayTitle",
+            "event",
+            "headBranch",
+            "headSha",
+            "name",
+            "number",
+            "startedAt",
+            "status",
+            "updatedAt",
+            "url",
+            "workflowDatabaseId",
+            "workflowName",
+        )
+        self._cmd_s = f'gh run list -R {owner}/{repo} -aL 100 --json {",".join(fields)}'
+        return self._cmd()
 
 
 class DataPipeline:
@@ -221,13 +264,6 @@ class DataPipeline:
 
     def get_overview(self, o, r):
         data = self._gh.get_overview(owner=o, repo=r)
-        # my_stuff = await asyncio.create_subprocess_shell(
-        #     GH.repo_info.format(o=o, r=r),
-        #     stdout=asyncio.subprocess.PIPE,
-        #     shell=True,
-        # )
-        # stdout, _ = await my_stuff.communicate()
-        # jdat = Edict(**json.loads(stdout.decode().strip()))
         jdat = Edict(**json.loads(self._gh.get_repo_info(owner=o, repo=r)))
 
         return (
@@ -268,15 +304,71 @@ class DataPipeline:
                     else ""
                 )
 
-                cs = datetime.fromisoformat(d.createdAt.replace("Z", "+00:00"))
-                _cs = date(cs.year, cs.month, cs.day)
-
-                now = datetime.now()
-                _ns = date(now.year, now.month, now.day)
-                age = f"[red]{(_ns - _cs).days:4d}[/] days"
-
+                age = self._get_age(d.createdAt)
                 mydoc.append((d.number, d.author.name, age, updated, d.title))
 
         richTxt = f"🌐[underline]:[/] {len(data)}   🟢[underline]:[/] {open_i}   🔒[underline]:[/] {closed_i}\n"
 
         return (richTxt, mydoc)
+
+    def _get_age(self, created_at):
+        cs = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+        _cs = date(cs.year, cs.month, cs.day)
+        now = datetime.now()
+        _ns = date(now.year, now.month, now.day)
+
+        if (_ns - _cs).days < 5:
+            age = f"[green]{(_ns - _cs).days:4d}[/] days"
+        elif (_ns - _cs).days < 10:
+            age = f"[yellow]{(_ns - _cs).days:4d}[/] days"
+        else:
+            age = f"[red]{(_ns - _cs).days:4d}[/] days"
+
+        return age
+
+    def get_pull_requests(self, o, r):
+        retv = []  # ("foo", "bar", "baz", "qux", "quux")]
+        data = json.loads(self._gh.get_pull_requests(owner=o, repo=r))
+
+        for datum in data:
+            d = Edict(**datum)
+            state = "🔵"
+
+            if d.state == "OPEN":
+                state = "🟢"
+            elif d.state == "CLOSED":
+                state = "🔒"
+
+            age = self._get_age(d.createdAt)
+            retv.append((d.number, age, state, d.author.name, d.title))
+
+        return ("Pull Requests", retv)
+
+    def get_actions(self, o, r):
+        data = json.loads(self._gh.get_actions(owner=o, repo=r))
+        retv = []
+
+        for datum in data:
+            d = Edict(**datum)
+            c = d.conclusion
+            e = d.event
+
+            if c == "success":
+                c = "🟢"
+            elif c == "failure":
+                c = "🔴"
+            elif c == "skipped":
+                c = "🚫"
+
+            if e == "pull_request":
+                e = "📬"
+            elif e == "merge_group":
+                e = "🔗"
+            elif e == "issues":
+                e = "🔧"
+            elif e == "push":
+                e = "🚀"
+
+            retv.append((d.number, d.attempt, e, c, d.name))
+
+        return ("Actions", retv)

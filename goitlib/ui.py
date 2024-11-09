@@ -101,6 +101,10 @@ Text { width: auto; }
 
         if lt == "issues":
             cb = self.DP.get_issues
+        elif lt == "pullrequests":
+            cb = self.DP.get_pull_requests
+        elif lt == "actions":
+            cb = self.DP.get_actions
         elif lt == "overview":
             cb = self.get_overview
             datum = (f"#{lt}_md", Label)
@@ -129,9 +133,9 @@ Text { width: auto; }
         self.S_ORG = list(repo_data.keys())[0]
         self.S_REPO = repos_t[0]
         datas = {
-            "pullrequests": (),
+            "pullrequests": ("Number", "Age", "State", "Author", "Title"),
             "issues": ("Issue", "Author", "Age", "Updated @", "Description"),
-            "actions": (),
+            "actions": ("Number", "Attempt", "Event", "Result", "Name"),
         }
         for tab in self.TABS:
             if tab.lower() != "overview":
@@ -181,7 +185,11 @@ Text { width: auto; }
                         )
                     else:
                         yield VerticalScroll(
-                            DataTable(zebra_stripes=True, id=f"{tab.lower()}_dt"),
+                            DataTable(
+                                cursor_type="row",
+                                zebra_stripes=True,
+                                id=f"{tab.lower()}_dt",
+                            ),
                             id=f"{tab.lower()}_sc",
                         )
 
