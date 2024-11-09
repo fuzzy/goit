@@ -98,13 +98,17 @@ Text { width: auto; }
         self._please_wait(tab)
         self.get_child_by_type(TabbedContent).active = tab
         datum = (f"#{lt}_dt", DataTable)
+        focus = False
 
         if lt == "issues":
             cb = self.DP.get_issues
+            focus = self.query_one("#issues_dt")
         elif lt == "pullrequests":
             cb = self.DP.get_pull_requests
+            focus = self.query_one("#pullrequests_dt")
         elif lt == "actions":
             cb = self.DP.get_actions
+            focus = self.query_one("#actions_dt")
         elif lt == "overview":
             cb = self.get_overview
             datum = (f"#{lt}_md", Label)
@@ -118,6 +122,8 @@ Text { width: auto; }
             datum,
             cb(self.S_ORG, self.S_REPO),
         )
+        if focus:
+            focus.focus()
 
     def on_mount(self):
         orgs_l = self.query_one("#orgs", ListView)
@@ -153,6 +159,7 @@ Text { width: auto; }
             self.S_ORG = str(event.item.query_one(Label).renderable)
             for repo in repos_t:
                 repos_l.append(ListItem(Label(repo)))
+            repos_l.focus()
         elif event.list_view.id == "repos":
             self.S_REPO = str(event.item.query_one(Label).renderable)
             self.post_message(Key("O", "O"))
