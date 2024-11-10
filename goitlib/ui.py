@@ -61,15 +61,35 @@ Text { width: auto; }
 
 #orgs { row-span: 2; }
 #repos { row-span: 5; height: 100%; }
+#repos_c { height: 100%; }
 .data-table-column { text-align: left; }
 #main { border: round grey; height: 100%; min-width: 50%; width: 100%; row-span: 5; column-span: 4; }
 """
     BINDINGS = [
-        ("O", "show_tab('overview')", "Overview"),
-        ("I", "show_tab('issues')", "Issues"),
-        ("P", "show_tab('pullrequests')", "PullRequests"),
-        ("A", "show_tab('actions')", "Actions"),
+        ("ctrl+o", "show_tab('overview')", "Overview"),
+        ("ctrl+s", "show_tab('issues')", "issues"),
+        ("ctrl+r", "show_tab('pullrequests')", "pull requests"),
+        ("ctrl+a", "show_tab('actions')", "actions"),
+        # ("/", "focus_search()", "search"),
     ]
+
+    def action_focus_search(self):
+        with open("debug.log", "w+") as fp:
+            fp.write("FOCUSING SEARCH\n")
+            focused = self.focused
+            if focused is not None:
+                fp.write(f"{dir(focused)}\n")
+                fp.write(f"{focused}\n")
+                try:
+                    parent = focused.ancestors.filter_one(
+                        lambda w: w.has_class("container")
+                    )
+                    fp.write(f"{dir(parent)}\n")
+                    fp.write(f"{parent}\n")
+                except:
+                    fp.write("NO PARENT\n")
+            else:
+                fp.write("NO FOUCS\n")
 
     def _please_wait(self, name):
         if name.lower() == "overview":
@@ -148,7 +168,7 @@ Text { width: auto; }
                 dt = self.query_one(f"#{tab.lower()}_dt", DataTable)
                 dim = dt.size
                 dt.add_columns(*datas[tab.lower()])
-        self.post_message(Key("O", "O"))
+        self.post_message(Key("ctrl+o", "o"))
 
     def on_list_view_selected(self, event):
         if event.list_view.id == "orgs":
@@ -162,7 +182,7 @@ Text { width: auto; }
             repos_l.focus()
         elif event.list_view.id == "repos":
             self.S_REPO = str(event.item.query_one(Label).renderable)
-            self.post_message(Key("O", "O"))
+            self.post_message(Key("ctrl+o", "o"))
 
     def render_tab(self, l1, l2, l3, l4, d):
         l1_q = self.query_one(*l1)
