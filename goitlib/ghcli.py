@@ -108,7 +108,7 @@ class GitHubCLIWrapper:
     @cache_results()
     def get_repo_info(self, owner=False, repo=False):
         fields = (
-            "archivedAt",
+            # "archivedAt",
             "assignableUsers",
             "codeOfConduct",
             "contactLinks",
@@ -197,13 +197,13 @@ class GitHubCLIWrapper:
             "comments",
             "createdAt",
             "id",
-            "isPinned",
+            # "isPinned",
             "labels",
             "milestone",
             "number",
             "reactionGroups",
             "state",
-            "stateReason",
+            # "stateReason",
             "title",
             "updatedAt",
             "url",
@@ -237,7 +237,7 @@ class GitHubCLIWrapper:
     @cache_results()
     def get_actions(self, owner, repo):
         fields = (
-            "attempt",
+            # "attempt",
             "conclusion",
             "createdAt",
             "databaseId",
@@ -254,7 +254,7 @@ class GitHubCLIWrapper:
             "workflowDatabaseId",
             "workflowName",
         )
-        self._cmd_s = f'gh run list -R {owner}/{repo} -aL 100 --json {",".join(fields)}'
+        self._cmd_s = f'gh run list -R {owner}/{repo} -L 100 --json {",".join(fields)}'
         return self._cmd()
 
 
