@@ -181,9 +181,9 @@ class GitHubCLIWrapper:
     @cache_results()
     def get_repositories(self, owner=False, repo=False):
         if not owner or not repo:
-            self._cmd_s = "gh repo list --json owner,name -L 1024"
+            self._cmd_s = "gh repo list --json owner,name -L 2048"
         else:
-            self._cmd_s = f"gh repo list --json name -L 1024 {owner}"
+            self._cmd_s = f"gh repo list --json name -L 2048 {owner}"
         return self._cmd()
 
     @cache_results()
@@ -209,7 +209,7 @@ class GitHubCLIWrapper:
             "url",
         )
         self._cmd_s = (
-            f"gh issue list -R {owner}/{repo} -L 1024 -s all --json {','.join(fields)}"
+            f"gh issue list -R {owner}/{repo} -L 100 -s all --json {','.join(fields)}"
         )
         return self._cmd()
 
@@ -231,7 +231,7 @@ class GitHubCLIWrapper:
             "updatedAt",
             "url",
         )
-        self._cmd_s = f'gh pr list -R {owner}/{repo} -L 1024 --json {",".join(fields)}'
+        self._cmd_s = f'gh pr list -R {owner}/{repo} -L 100 --json {",".join(fields)}'
         return self._cmd()
 
     @cache_results()
@@ -254,7 +254,7 @@ class GitHubCLIWrapper:
             "workflowDatabaseId",
             "workflowName",
         )
-        self._cmd_s = f'gh run list -R {owner}/{repo} -L 100 --json {",".join(fields)}'
+        self._cmd_s = f'gh run list -R {owner}/{repo} -L 75 --json {",".join(fields)}'
         return self._cmd()
 
 
